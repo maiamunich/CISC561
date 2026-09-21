@@ -1,14 +1,5 @@
-"""
-HW1 I/O scaffold: read input.txt, emit a valid (naive) tour to output.txt.
-
-City  = (x, y, z)  — three ints
-Tour  = [city0, city1, ..., cityN-1]  — each city once; return-to-start is
-         implied when computing distance / writing the extra closing line
-"""
-
 import math
 import random
-from typing import Any
 
 
 def read_cities(path="input.txt"):
@@ -26,7 +17,6 @@ def write_output(tour, distance, path="output.txt"):
         f.write("{:.3f}\n".format(distance))
         for city in tour:
             f.write("{} {} {}\n".format(city[0], city[1], city[2]))
-        # Close the loop: last line must equal the first city.
         start = tour[0]
         f.write("{} {} {}\n".format(start[0], start[1], start[2]))
 
@@ -35,7 +25,6 @@ def euclidean(a, b):
 
 
 def tour_distance(tour):
-    """Closed-loop length: visit every city in order, then return to tour[0]."""
     total = 0.0
     for i in range(len(tour) - 1):
         total += euclidean(tour[i], tour[i + 1])
@@ -94,10 +83,10 @@ def crossover(parent1, parent2):
     child = parent1[0:crossover_point] + parent2[crossover_point:]
     return repair(child, parent1)
 
-def crossover2(parent1, parent2, start, end):
-    child = parent2 
-    child[start:end] = parent1[start:end]
-    return repair(child, parent1)
+def crossover2(parent1, parent2, start, end, all_cities):
+    child = list(parent2)
+    child[start : end + 1] = parent1[start : end + 1]
+    return repair(child, all_cities)
 
 def mutate(tour):
     tour = list(tour)
@@ -119,7 +108,7 @@ def genetic_algorithm(cities, max_generations=100):
             end = random.randint(1, len(parent1) - 1)
             if start > end:
                 start, end = end, start
-            child = crossover2(parent1, parent2, start, end)
+            child = crossover2(parent1, parent2, start, end, cities)
             new_population.append(child)
         fitness = evaluate_population(new_population)
         fitness, population = order(fitness, new_population)

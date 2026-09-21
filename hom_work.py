@@ -9,8 +9,6 @@ This file is a readable "see how the pieces fit" version. Study it, then
 rewrite the GA parts yourself so the work is yours.
 """
 
-from __future__ import division  # just in case; fine on Py3
-
 import math
 import random
 import time
