@@ -1,16 +1,8 @@
 import math
-import os
 import random
 
 
-def resolve_path(path):
-    if os.path.isabs(path):
-        return path
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), path)
-
-
 def read_cities(path="input.txt"):
-    path = resolve_path(path)
     with open(path) as f:
         lines = [line.strip() for line in f if line.strip()]
     n = int(lines[0])
@@ -21,7 +13,6 @@ def read_cities(path="input.txt"):
     return cities
 
 def write_output(tour, distance, path="output.txt"):
-    path = resolve_path(path)
     with open(path, "w") as f:
         f.write("{:.3f}\n".format(distance))
         for city in tour:
@@ -125,6 +116,8 @@ def genetic_algorithm(cities, max_generations=100):
             if start > end:
                 start, end = end, start
             child = crossover2(parent1, parent2, start, end, cities)
+            if random.random() < 0.1:
+                child = mutate(child)
             new_population.append(child)
 
         fitness = evaluate_population(new_population)
