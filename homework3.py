@@ -1,8 +1,16 @@
 import math
+import os
 import random
 
 
+def resolve_path(path):
+    if os.path.isabs(path):
+        return path
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), path)
+
+
 def read_cities(path="input.txt"):
+    path = resolve_path(path)
     with open(path) as f:
         lines = [line.strip() for line in f if line.strip()]
     n = int(lines[0])
@@ -13,6 +21,7 @@ def read_cities(path="input.txt"):
     return cities
 
 def write_output(tour, distance, path="output.txt"):
+    path = resolve_path(path)
     with open(path, "w") as f:
         f.write("{:.3f}\n".format(distance))
         for city in tour:
