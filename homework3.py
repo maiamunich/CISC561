@@ -100,16 +100,24 @@ def genetic_algorithm(cities, max_generations=100):
     fitness, population = order(fitness, population)
     generation = 0
     while True:
-        new_population = []
-        for i in range(len(population)):
+        n = len(population)
+        elite_count = max(1, int(n * 0.10)) 
+
+        new_population = [list(population[i]) for i in range(elite_count)]
+
+        while len(new_population) < n:
+            cutoff = n - elite_count  
+            i = random.randrange(cutoff)
+            j = random.randrange(cutoff)
             parent1 = population[i]
-            parent2 = population[(i + 1) % len(population)]
-            start = random.randint(1, len(parent1) - 1)
-            end = random.randint(1, len(parent1) - 1)
+            parent2 = population[j]
+            start = random.randint(0, len(parent1) - 1)
+            end = random.randint(0, len(parent1) - 1)
             if start > end:
                 start, end = end, start
             child = crossover2(parent1, parent2, start, end, cities)
             new_population.append(child)
+
         fitness = evaluate_population(new_population)
         fitness, population = order(fitness, new_population)
         generation += 1
