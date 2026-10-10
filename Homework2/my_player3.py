@@ -1,3 +1,4 @@
+import random
 from pathlib import Path
 
 from read import readInput
@@ -11,7 +12,8 @@ class MyPlayer3():
     SAFETY_WEIGHT = 5
 
     def __init__(self):
-        self.type = 'random'
+        self.type = 'aggressive'
+        self.move_number = 0
 
     def get_input(self, go, piece_type):
         '''
@@ -20,8 +22,21 @@ class MyPlayer3():
         :param go: Go instance.
         :param piece_type: 1('X') or 2('O').
         :return: (row, column) coordinate of input.
-        '''        
+        '''   
+        self.move_number += 1
+        if self.type == 'random':
+            return self.get_random_move(go, piece_type)
+        if self.type == 'aggressive':
+            return self.get_aggressive_move(go, piece_type)
         return self.get_best_move(go, piece_type)
+
+    def get_random_move(self, go, piece_type):
+        possible_moves = []
+        for row in range(go.size):
+            for column in range(go.size):
+                if go.valid_place_check(row, column, piece_type, test_check=True):
+                    possible_moves.append((row, column))
+        return random.choice(possible_moves) if possible_moves else "PASS"
 
     def count_group_liberties(self, go, row, column):
         liberties = set()
@@ -54,6 +69,59 @@ class MyPlayer3():
             + self.SAFETY_WEIGHT * avoided_capture_number
         )
 
+    def simulate_move(self, go, move, piece_type):
+        trial_go = go.copy_board()
+        trial_go.board[move[0]][move[1]] = piece_type
+        trial_go.update_board(trial_go.board)
+        captured_pieces = trial_go.remove_died_pieces(3 - piece_type)
+        return trial_go, len(captured_pieces)
+
+    def get_aggressive_move(self, go, piece_type):
+        best_move = None
+        best_score = -float('inf')
+        at_risk_before = self.count_at_risk_pieces(go, piece_type)
+
+        for row in range(go.size):
+            for column in range(go.size):
+                move = (row, column)
+                if not go.valid_place_check(row, column, piece_type, test_check=True):
+                    continue
+
+                trial_go, captured_number = self.simulate_move(go, move, piece_type)
+                opponent_best_capture = 0
+                opponent_type = 3 - piece_type
+                for opponent_row in range(go.size):
+                    for opponent_column in range(go.size):
+                        opponent_move = (opponent_row, opponent_column)
+                        if not trial_go.valid_place_check(
+                            opponent_row,
+                            opponent_column,
+                            opponent_type,
+                            test_check=True,
+                        ):
+                            continue
+                        response_go, _ = self.simulate_move(
+                            trial_go,
+                            opponent_move,
+                            opponent_type,
+                        )
+                        opponent_capture = len(response_go.remove_died_pieces(piece_type))
+                        opponent_best_capture = max(opponent_best_capture, opponent_capture)
+
+                liberty_number = self.count_group_liberties(trial_go, row, column)
+                at_risk_after = self.count_at_risk_pieces(trial_go, piece_type)
+                avoided_capture_number = at_risk_before - at_risk_after
+                score = (
+                    self.CAPTURE_WEIGHT * (captured_number - opponent_best_capture)
+                    + self.LIBERTY_WEIGHT * liberty_number
+                    + self.SAFETY_WEIGHT * avoided_capture_number
+                )
+                if score > best_score:
+                    best_score = score
+                    best_move = move
+
+        return best_move if best_move is not None else "PASS"
+
     def get_best_move(self, go, piece_type):
         '''
         Get the best move for the player.
@@ -79,6 +147,7 @@ class MyPlayer3():
                         best_score = score
                         best_move = (i, j)
         return best_move if best_move is not None else "PASS"
+
 if __name__ == "__main__":
     N = 5
     input_path = Path("input.txt")
