@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from read import readInput
 from write import writeOutput
 
@@ -79,7 +81,10 @@ class MyPlayer3():
         return best_move if best_move is not None else "PASS"
 if __name__ == "__main__":
     N = 5
-    piece_type, previous_board, board = readInput(N)
+    input_path = Path("input.txt")
+    if not input_path.is_file():
+        input_path = Path(__file__).resolve().with_name("input.txt")
+    piece_type, previous_board, board = readInput(N, input_path)
     go = GO(N)
     go.set_board(piece_type, previous_board, board)
     player = MyPlayer3()
